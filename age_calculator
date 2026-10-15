@@ -1,0 +1,292 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const AgeCalculatorApp());
+}
+
+class AgeCalculatorApp extends StatelessWidget {
+  const AgeCalculatorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Age Calculator',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+        ),
+        useMaterial3: true,
+      ),
+      home: const AgeCalculatorPage(),
+    );
+  }
+}
+
+class AgeCalculatorPage extends StatefulWidget {
+  const AgeCalculatorPage({super.key});
+
+  @override
+  State<AgeCalculatorPage> createState() =>
+      _AgeCalculatorPageState();
+}
+
+class _AgeCalculatorPageState
+    extends State<AgeCalculatorPage> {
+  DateTime? birthDate;
+  int? years;
+  int? months;
+  int? days;
+
+  Future<void> selectBirthDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      helpText: 'Select your date of birth',
+    );
+
+    if (picked != null) {
+      setState(() {
+        birthDate = picked;
+        years = null;
+        months = null;
+        days = null;
+      });
+    }
+  }
+
+  void calculateAge() {
+    if (birthDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your date of birth'),
+        ),
+      );
+      return;
+    }
+
+    final today = DateTime.now();
+
+    int y = today.year - birthDate!.year;
+    int m = today.month - birthDate!.month;
+    int d = today.day - birthDate!.day;
+
+    if (d < 0) {
+      final previousMonth =
+          DateTime(today.year, today.month, 0);
+      d += previousMonth.day;
+      m--;
+    }
+
+    if (m < 0) {
+      m += 12;
+      y--;
+    }
+
+    setState(() {
+      years = y;
+      months = m;
+      days = d;
+    });
+  }
+
+  void resetCalculator() {
+    setState(() {
+      birthDate = null;
+      years = null;
+      months = null;
+      days = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F3FF),
+      appBar: AppBar(
+        title: const Text(
+          'Age Calculator',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.cake_rounded,
+                size: 90,
+                color: Colors.deepPurple,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Calculate Your Age',
+                style: TextStyle(
+                  fontSize: 27,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Find your exact age in years, months and days.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Date of birth selection
+              Card(
+                elevation: 3,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: const Icon(
+                    Icons.calendar_month,
+                    color: Colors.deepPurple,
+                    size: 32,
+                  ),
+                  title: const Text(
+                    'Date of Birth',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    birthDate == null
+                        ? 'Choose your birth date'
+                        : '${birthDate!.day.toString().padLeft(2, '0')}/'
+                          '${birthDate!.month.toString().padLeft(2, '0')}/'
+                          '${birthDate!.year}',
+                  ),
+                  trailing: const Icon(
+                    Icons.edit_calendar,
+                    color: Colors.deepPurple,
+                  ),
+                  onTap: selectBirthDate,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Calculate button
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton.icon(
+                  onPressed: calculateAge,
+                  icon: const Icon(Icons.calculate),
+                  label: const Text(
+                    'Calculate Age',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Result section
+              if (years != null) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Your Age Is',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    ageCard('Years', years!),
+                    const SizedBox(width: 8),
+                    ageCard('Months', months!),
+                    const SizedBox(width: 8),
+                    ageCard('Days', days!),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: resetCalculator,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reset'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.deepPurple,
+                      side: const BorderSide(
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget ageCard(String label, int value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: 22,
+          horizontal: 4,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.deepPurple,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Text(
+              '$value',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
